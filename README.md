@@ -1,4 +1,4 @@
-#Accident Timer (V1.1, 2019-07-13)
+# Accident Timer (V1.1, 2019-07-13)
 
 This script will count the number of in game seconds and return the time that has passed in seconds, minutes, hours, and days. This information will be displayed on a configurable LCD panel and echo in the console of the programmable block. An optional sound block can be configured to play when the ResetTime argument is passed.
 
