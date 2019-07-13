@@ -1,5 +1,33 @@
-const String lcdDisplayName = "Harage - Text panel - Accident Timer";
+/*
+Accident Timer (V1.1, 2019-07-13)
+
+This script will count the number of in game seconds and return the time that has passed in
+seconds, minutes, hours, and days. This information will be displayed on a configurable LCD
+panel and echo in the console of the programmable block. An optional sound block can be
+configured to play when the ResetTime argument is passed.
+
+This script accepts a 7 arguments, that are self explainatory, which can be passed to a button
+press linked to the programming block this script is running on.
+- ResetTime
+- AddSecond
+- AddMinute
+- AddHour
+- RemoveSecond
+- RemoveMinute
+- RemoveHour
+*/ 
+
+// [Configuration]
+
+const String LCDDisplayName = "Harage - Text panel - Accident Timer";
+const float LCDFontSize = 2.5f; // Include the "f" at the end of the font size
+string LCDAlignment = "Center"; // "Left", "Center", "Right"
+
+const bool UseSpeakers = true;
 const String SpeakerName = "Harage - Sound Block - Accident";
+const int TimeToPlaySound = 1;
+
+// [End Of Configuration]
 
 public Program()
 {
@@ -7,11 +35,11 @@ public Program()
 }
 // Variable for counting every 10th tick
 public int tick10 = 0;
-// variable for counting every 60 ticks
+// Variable for counting every 60 ticks
 public int second = 0;
-// displayed time
+// Displayed time
 public int time;
-// unit of time (eg: seconds, minutes, hours)
+// Unit of time (eg: seconds, minutes, hours)
 public string timeUnit = "";
 
 public void Save()
@@ -22,23 +50,39 @@ public void Save()
 
 public void Main(string action)
 {
-  var lcdDisplay = (IMyTextPanel) GridTerminalSystem.GetBlockWithName(lcdDisplayName);
+  var lcdDisplay = (IMyTextPanel) GridTerminalSystem.GetBlockWithName(LCDDisplayName);
   var Speaker = (IMySoundBlock) GridTerminalSystem.GetBlockWithName(SpeakerName);
   
   var TimeKeyValuePair = CalculateTime(second);
   var SecondTime = TimeKeyValuePair.Key.ToString();
   var SecondTimeUnit = TimeKeyValuePair.Value;
-  
+
+  // Configure LCD screen
   lcdDisplay.ContentType=ContentType.TEXT_AND_IMAGE;
-  lcdDisplay.SetValue( "alignment", (Int64)2 );
-  lcdDisplay.FontSize = 2.5f;
+  lcdDisplay.FontSize = LCDFontSize;
+  switch (LCDAlignment)
+  {
+    case "Left":
+      lcdDisplay.SetValue( "alignment", (Int64)0 );
+      break;
+    case "Right":
+      lcdDisplay.SetValue( "alignment", (Int64)1 );
+      break;
+    case "Center":
+      lcdDisplay.SetValue( "alignment", (Int64)2 );
+      break;
+  }
+
 
   switch (action)
   {
     case "ResetTime":
       Storage = "0";
-      Speaker.SelectedSound = "SoundBlockAlert1";
-      Speaker.Play();
+      if (UseSpeakers)
+      {
+        Speaker.SelectedSound = "SoundBlockAlert1";
+        Speaker.Play();
+      }
       break;
     case "AddSecond":
       Storage = (Int32.Parse(Storage) + 1).ToString();
@@ -73,14 +117,13 @@ public void Main(string action)
     second++;
     Storage = second.ToString();
   }
-
-  if (second == 5)
+  if (UseSpeakers)
   {
-    Speaker.Stop();
+    if (second == TimeToPlaySound)
+    {
+      Speaker.Stop();
+    }
   }
-
-  // Echo(SecondTime+" "+SecondTimeUnit);
-  
   lcdDisplay.WriteText("\n"+SecondTime+" "+SecondTimeUnit+(time == 1 ? "": "S")+"\n"+"ACCIDENT FREE");
   Echo("\n"+SecondTime+" "+SecondTimeUnit+(time == 1 ? "": "S")+"\n"+"ACCIDENT FREE");
 }
