@@ -1,14 +1,18 @@
-const String LcdDisplayName = "Harage - Text panel - Accident Timer";
+const String lcdDisplayName = "Harage - Text panel - Accident Timer";
 const String SpeakerName = "Harage - Sound Block - Accident";
 
 public Program()
 {
   Runtime.UpdateFrequency = UpdateFrequency.Update10;
 }
-
+// Variable for counting every 10th tick
 public int tick10 = 0;
+// variable for counting every 60 ticks
 public int second = 0;
-public int Time;
+// displayed time
+public int time;
+// unit of time (eg: seconds, minutes, hours)
+public string timeUnit = "";
 
 public void Save()
 {
@@ -18,14 +22,16 @@ public void Save()
 
 public void Main(string action)
 {
-  var LcdDisplay = (IMyTextPanel) GridTerminalSystem.GetBlockWithName(LcdDisplayName);
+  var lcdDisplay = (IMyTextPanel) GridTerminalSystem.GetBlockWithName(lcdDisplayName);
   var Speaker = (IMySoundBlock) GridTerminalSystem.GetBlockWithName(SpeakerName);
-
-  LcdDisplay.ContentType=ContentType.TEXT_AND_IMAGE;
-  LcdDisplay.SetValue( "alignment", (Int64)2 );
-  LcdDisplay.FontSize = 2.5f;
-
-  string TimeUnit = "";
+  
+  var TimeKeyValuePair = CalculateTime(second);
+  var SecondTime = TimeKeyValuePair.Key.ToString();
+  var SecondTimeUnit = TimeKeyValuePair.Value;
+  
+  lcdDisplay.ContentType=ContentType.TEXT_AND_IMAGE;
+  lcdDisplay.SetValue( "alignment", (Int64)2 );
+  lcdDisplay.FontSize = 2.5f;
 
   switch (action)
   {
@@ -42,6 +48,15 @@ public void Main(string action)
       break;
     case "AddHour":
       Storage = (Int32.Parse(Storage) + 3600).ToString();
+      break;
+    case "RemoveSecond":
+      Storage = (Int32.Parse(Storage) - 1).ToString();
+      break;
+    case "RemoveMinute":
+      Storage = (Int32.Parse(Storage) - 60).ToString();
+      break;
+    case "RemoveHour":
+      Storage = (Int32.Parse(Storage) - 3600).ToString();
       break;
   }
 
@@ -64,27 +79,39 @@ public void Main(string action)
     Speaker.Stop();
   }
 
-  if (second <= 60)
-  {
-    TimeUnit = " SECOND";
-    Time = second;
-  }
-  else if (second > 60 && second < 3600)
-  {
-    TimeUnit = " MINUTE";
-    Time = Convert.ToInt16(second / 60);
-  }
-  else if (second > 3600 && second < 86400)
-  {
-    TimeUnit = " HOUR";
-    Time = Convert.ToInt16(second / 3600);
-  }
-    else if (second > 86400)
-  {
-    TimeUnit = " DAY";
-    Time = Convert.ToInt16(second / 86400);
-  }
+  // Echo(SecondTime+" "+SecondTimeUnit);
   
-  LcdDisplay.WriteText("\n"+Time+" "+TimeUnit+(Time == 1 ? "": "S")+"\n"+"ACCIDENT FREE");
-  Echo("\n"+Time+" "+TimeUnit+(Time == 1 ? "": "S")+"\n"+"ACCIDENT FREE");
+  lcdDisplay.WriteText("\n"+SecondTime+" "+SecondTimeUnit+(time == 1 ? "": "S")+"\n"+"ACCIDENT FREE");
+  Echo("\n"+SecondTime+" "+SecondTimeUnit+(time == 1 ? "": "S")+"\n"+"ACCIDENT FREE");
+}
+
+public KeyValuePair<int, string> CalculateTime(int timeInSeconds)
+{
+  if (timeInSeconds <= 59)
+  {
+    timeUnit = "SECOND";
+    time = timeInSeconds;
+    return new KeyValuePair<int, string>(time, timeUnit);
+  }
+  else if (timeInSeconds >= 60 && timeInSeconds <= 3599)
+  {
+    timeUnit = "MINUTE";
+    time = Convert.ToInt16(timeInSeconds / 60);
+    return new KeyValuePair<int, string>(time, timeUnit);
+  }
+  else if (timeInSeconds >= 3600 && timeInSeconds <= 86399)
+  {
+    timeUnit = "HOUR";
+    time = Convert.ToInt16(timeInSeconds / 3600);
+    return new KeyValuePair<int, string>(time, timeUnit);
+  }
+    else if (timeInSeconds >= 86400)
+  {
+    timeUnit = "DAY";
+    time = Convert.ToInt16(timeInSeconds / 86400);
+    return new KeyValuePair<int, string>(time, timeUnit);
+  }
+  timeUnit = "SECOND";
+  time = timeInSeconds;
+  return new KeyValuePair<int, string>(time, timeUnit);
 }
